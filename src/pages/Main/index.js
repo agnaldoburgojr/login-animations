@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-undef */
 import React from 'react';
 import {
   View,
@@ -7,27 +9,82 @@ import {
   TouchableOpacity,
   Text,
   Animated,
+  Keyboard,
 } from 'react-native';
 
 export default function Main() {
   const [offset] = React.useState(new Animated.ValueXY({x: 0, y: 100}));
+  const [opacity] = React.useState(new Animated.Value(0));
+  const [logo] = React.useState(new Animated.ValueXY({x: 60, y: 60}));
 
   React.useEffect(() => {
-    Animated.spring(offset.y, {
-      toValue: -120,
-      speed: 4,
-      bounciness: 20,
-    }).start();
-  }, [offset.y]);
+    keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      keyboardDidShow,
+    );
+    keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      keyboardDidHide,
+    );
+
+    Animated.parallel([
+      Animated.spring(offset.y, {
+        toValue: -120,
+        speed: 4,
+        bounciness: 20,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 2500,
+      }),
+    ]).start();
+  }, [keyboardDidHide, keyboardDidShow, offset.y, opacity]);
+
+  function keyboardDidShow() {
+    Animated.parallel([
+      Animated.timing(logo.x, {
+        toValue: 30,
+        duration: 200,
+      }),
+      Animated.timing(logo.y, {
+        toValue: 30,
+        duration: 200,
+      }),
+      Animated.spring(offset.y, {
+        toValue: 30,
+        speed: 4,
+        bounciness: 5,
+      }),
+    ]).start();
+  }
+
+  function keyboardDidHide() {
+    Animated.parallel([
+      Animated.timing(logo.x, {
+        toValue: 60,
+        duration: 200,
+      }),
+      Animated.timing(logo.y, {
+        toValue: 60,
+        duration: 200,
+      }),
+      Animated.spring(offset.y, {
+        toValue: -120,
+        speed: 2,
+        bounciness: 5,
+      }),
+    ]).start();
+  }
   return (
     <KeyboardAvoidingView style={styles.background}>
       <View style={styles.logoContainer}>
-        <View style={styles.logo} />
+        <Animated.View style={[styles.logo, {width: logo.x, height: logo.y}]} />
       </View>
       <Animated.View
         style={[
           styles.container,
           {
+            opacity: opacity,
             transform: [{translateY: offset.y}],
           },
         ]}>
